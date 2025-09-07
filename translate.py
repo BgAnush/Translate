@@ -1,24 +1,26 @@
 from fastapi import APIRouter
 from models.translate_models import TranslateRequest
 from utils.translate_helper import translate_text
-import asyncio
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 router = APIRouter(prefix="/translate", tags=["translate"])
 
-async def translate_item(text: str, target: str):
-    try:
-        return text, translate_text(text, target)["translated"]
-    except Exception as e:
-        return text, f"Error: {str(e)}"
-
 @router.post("/")
-async def translate_bulk(req: TranslateRequest):
+def translate_bulk(req: TranslateRequest):
     """
     Translate multiple texts concurrently into a single target language.
-    Fast even for 50-100 items.
+    Uses threads to speed up translation for 20-100 items.
     """
-    tasks = [translate_item(text, req.target) for text in req.texts]
-    results = await asyncio.gather(*tasks)
-    
-    translations = {text: translated for text, translated in results}
+    translations = {}
+    max_workers = min(20, len(req.texts))  # Use up to 20 threads
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_text = {executor.submit(translate_text, text, req.target): text for text in req.texts}
+        for future in as_completed(future_to_text):
+            text = future_to_text[future]
+            try:
+                translations[text] = future.result()["translated"]
+            except Exception as e:
+                translations[text] = f"Error: {str(e)}"
+
     return {"target": req.target, "translations": translations}
