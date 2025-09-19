@@ -8,13 +8,12 @@ from pydantic import BaseModel
 from googletrans import Translator
 from transliterate import translit
 from cryptography.fernet import Fernet
-import asyncio
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # ====================================
 # 🔐 ENCRYPTION / DECRYPTION SETUP
 # ====================================
-# Generate a key (⚠️ Do this once and save securely, don’t regenerate each run)
+# ⚠️ Generate a key once and save securely. Don’t regenerate on every run.
 key = Fernet.generate_key()
 cipher = Fernet(key)
 
@@ -23,7 +22,7 @@ def encrypt_message(message: str) -> str:
     return cipher.encrypt(message.encode()).decode()
 
 def decrypt_message(encrypted_message: str) -> str:
-    """Decrypt message"""
+    """Decrypt a message"""
     return cipher.decrypt(encrypted_message.encode()).decode()
 
 # ====================================
@@ -31,31 +30,29 @@ def decrypt_message(encrypted_message: str) -> str:
 # ====================================
 translator = Translator()
 
-def detect_and_translate(message: str):
+def detect_and_translate(message: str) -> str:
     """
     Detect language, translate accordingly:
-    - Non-English -> English
-    - English -> Kannada
+    - Non-English → English
+    - English → Kannada
     """
     detected = translator.detect(message)
     lang = detected.lang
 
     if lang != "en":
-        translated_text = translator.translate(message, dest="en").text
-        return translated_text
+        return translator.translate(message, dest="en").text
     else:
-        translated_text = translator.translate(message, dest="kn").text
-        return translated_text
+        return translator.translate(message, dest="kn").text
 
-def transliterate_roman_kannada(text: str):
+def transliterate_roman_kannada(text: str) -> str:
     """Transliterate Roman Kannada input to Kannada script"""
     try:
-        return translit(text, 'kn')
+        return translit(text, "kn")
     except Exception:
         return text
 
-def translate_text(text: str, target: str):
-    """Helper to translate into given target language"""
+def translate_text(text: str, target: str) -> dict:
+    """Translate into a given target language"""
     translated = translator.translate(text, dest=target)
     return {"original": text, "translated": translated.text}
 
@@ -71,34 +68,31 @@ class TranslateRequest(BaseModel):
 # ====================================
 router = APIRouter(prefix="/translate", tags=["translate"])
 
-async def translate_item(text: str, target: str):
-    try:
-        return text, translate_text(text, target)["translated"]
-    except Exception as e:
-        return text, f"Error: {str(e)}"
-
 @router.post("/")
-async def translate_bulk(req: TranslateRequest):
+def translate_bulk(req: TranslateRequest):
     """
     Translate multiple texts concurrently into a single target language.
-    Optimized for speed (20-100 items).
+    Uses ThreadPoolExecutor for speed with many texts.
     """
     translations = {}
     max_workers = min(20, len(req.texts))  # Use up to 20 threads
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        future_to_text = {executor.submit(translate_text, text, req.target): text for text in req.texts}
+        future_to_text = {
+            executor.submit(translate_text, text, req.target): text
+            for text in req.texts
+        }
         for future in as_completed(future_to_text):
-            text = future_to_text[future]
             try:
-                translations[text] = future.result()["translated"]
+                result = future.result()
+                translations[result["original"]] = result["translated"]
             except Exception as e:
-                translations[text] = f"Error: {str(e)}"
+                translations[future_to_text[future]] = f"Error: {str(e)}"
 
     return {"target": req.target, "translations": translations}
 
 # ====================================
-# 📝 Optional Local Example (Remove in Production)
+# 📝 Optional Local Example (for testing only)
 # ====================================
 if __name__ == "__main__":
     while True:
