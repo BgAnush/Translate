@@ -2,3 +2,5 @@ fastapi
 uvicorn
 pydantic
 deep-translator
+cryptography
+transliterate
