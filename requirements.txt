@@ -4,3 +4,4 @@ pydantic
 deep-translator
 cryptography
 transliterate
+googletrans
