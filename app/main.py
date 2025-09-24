@@ -1,16 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from translator import translate_text
+from app.translator import translate_text   # <-- fixed import
 
-# Initialize FastAPI app
 app = FastAPI(
     title="Language Translator API",
     version="1.0",
     description="Simple API to detect and translate text"
 )
 
-# CORS setup (replace * with specific domains in production)
+# CORS setup
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  
@@ -19,7 +18,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Request model
 class TranslationRequest(BaseModel):
     text: str
 
