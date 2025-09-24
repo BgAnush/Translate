@@ -1,3 +1,4 @@
 fastapi
-uvicorn[standard]
-deep-translator
+uvicorn
+googletrans==4.0.0-rc1
+indic-transliteration
