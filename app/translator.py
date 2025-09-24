@@ -4,7 +4,6 @@ translator = Translator()
 
 def translate_text(text: str, dest: str = "en"):
     try:
-        # Auto-detect language
         detection = translator.detect(text)
         translated = translator.translate(text, dest=dest)
 
