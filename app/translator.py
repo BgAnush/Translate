@@ -1,13 +1,9 @@
-from googletrans import Translator
-
-translator = Translator()
+from deep_translator import GoogleTranslator
 
 def translate_to_english(text: str):
-    detected_lang = translator.detect(text).lang
-    translated = translator.translate(text, src=detected_lang, dest="en")
-    
+    translated = GoogleTranslator(source='auto', target='en').translate(text)
     return {
         "input_text": text,
-        "detected_language": detected_lang,
-        "translated_text": translated.text,
+        "detected_language": "auto",
+        "translated_text": translated,
     }
