@@ -1,31 +1,22 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from app.translator import translate_text   # <-- fixed import
+from app.models import TranslateRequest
+from app.translator import translate_text
 
-app = FastAPI(
-    title="Language Translator API",
-    version="1.0",
-    description="Simple API to detect and translate text"
-)
-
-# CORS setup
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-class TranslationRequest(BaseModel):
-    text: str
+app = FastAPI(title="FarmerChat Translator API", version="1.0")
 
 @app.get("/")
-async def root():
-    return {"message": "Welcome to Language Translator API"}
+def root():
+    return {"message": "FarmerChat Translator API is running!"}
 
 @app.post("/translate")
-async def translate(request: TranslationRequest):
-    result = translate_text(request.text)
+def translate(request: TranslateRequest):
+    """
+    Translate input text to the target language.
+    Example JSON:
+    {
+        "text": "मेरा नाम अनुष है",
+        "target_language": "kn"
+    }
+    """
+    result = translate_text(request.text, request.target_language)
     return result
