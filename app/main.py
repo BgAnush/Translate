@@ -1,21 +1,27 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import translate_routes
+from .translator import translate_to_english
 
-app = FastAPI(title="Universal Translation API")
+app = FastAPI(title="Language Translator API", version="1.0")
 
 # ✅ CORS setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For production, replace "*" with specific frontend URLs
+    allow_origins=["*"],  # ⚠️ In production, replace "*" with ["https://yourfrontend.com"]
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# include routes
-app.include_router(translate_routes.router, prefix="/api", tags=["translation"])
+class TranslateRequest(BaseModel):
+    text: str
 
 @app.get("/")
 def root():
-    return {"message": "Universal Translation API is running 🚀"}
+    return {"message": "Welcome to the Translator API! Use /translate endpoint."}
+
+@app.post("/translate")
+def translate(request: TranslateRequest):
+    result = translate_to_english(request.text)
+    return result
