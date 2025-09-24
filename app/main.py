@@ -1,25 +1,21 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes.translate_routes import router
+from app.routes import translate_routes
 
-app = FastAPI(title="Multi-Language Translation API 🚀")
+app = FastAPI(title="Translation Service API")
 
-# CORS setup
+# ✅ CORS setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:8081",   # React Native Metro
-        "http://localhost:3000",   # If you test in web
-        "*"                        # Allow all origins (for testing; restrict later)
-    ],
+    allow_origins=["*"],  # Change ["*"] to specific domains in production
     allow_credentials=True,
-    allow_methods=["*"],  # GET, POST, PUT, DELETE, OPTIONS
-    allow_headers=["*"],  # Allow all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# Include API routes
-app.include_router(router, prefix="/api/translate", tags=["Translation"])
+# include translation routes
+app.include_router(translate_routes.router, prefix="/api", tags=["translation"])
 
 @app.get("/")
-async def root():
-    return {"message": "Welcome to Multi-Language Translation API"}
+def root():
+    return {"message": "Translation API is running 🚀"}
