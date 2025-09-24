@@ -1,21 +1,21 @@
-from googletrans import Translator
+from deep_translator import GoogleTranslator
 
-translator = Translator()
-
-def translate_text(text: str, dest: str = "en"):
+def translate_text(text: str, target_language: str = "en") -> dict:
+    """
+    Translate input text to the target language.
+    Auto-detects the source language.
+    """
     try:
-        detection = translator.detect(text)
-        translated = translator.translate(text, dest=dest)
-
+        translated = GoogleTranslator(source='auto', target=target_language).translate(text)
         return {
             "input_text": text,
-            "detected_language": detection.lang,
-            "translated_text": translated.text
+            "translated_text": translated,
+            "target_language": target_language
         }
     except Exception as e:
         return {
             "input_text": text,
-            "detected_language": "auto",
-            "translated_text": f"(Translation failed) {text}",
+            "translated_text": None,
+            "target_language": target_language,
             "error": str(e)
         }
