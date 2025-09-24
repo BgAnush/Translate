@@ -26,8 +26,15 @@ def bulk_translate_from_english(messages: list[str], target_lang: str) -> list[s
         translated.append(text)
     return translated
 
-def transliterate_roman_kannada(text: str) -> str:
+def roman_kannada_to_english(text: str) -> str:
+    """
+    Convert Romanized Kannada -> Kannada script -> English
+    """
     try:
-        return translit(text, 'kn')
+        # Step 1: Romanized Kannada -> Kannada script
+        kannada_text = translit(text, 'kn')
+        # Step 2: Kannada script -> English
+        english_text = GoogleTranslator(source='kn', target='en').translate(kannada_text)
+        return english_text
     except Exception:
         return text
