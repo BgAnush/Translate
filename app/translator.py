@@ -1,22 +1,22 @@
-from deep_translator import GoogleTranslator
+from googletrans import Translator
 
-def translate_to_english(text: str):
+translator = Translator()
+
+def translate_text(text: str, dest: str = "en"):
     try:
-        # Try translating with auto-detect
-        translated = GoogleTranslator(source="auto", target="en").translate(text)
-        
-        # If translation failed (same text returned), fallback
-        if translated.strip().lower() == text.strip().lower():
-            translated = f"(No clear translation) {text}"
-        
+        # Auto-detect language
+        detection = translator.detect(text)
+        translated = translator.translate(text, dest=dest)
+
         return {
             "input_text": text,
-            "detected_language": "auto",
-            "translated_text": translated,
+            "detected_language": detection.lang,
+            "translated_text": translated.text
         }
     except Exception as e:
         return {
             "input_text": text,
-            "detected_language": "unknown",
-            "translated_text": f"Error: {str(e)}",
+            "detected_language": "auto",
+            "translated_text": f"(Translation failed) {text}",
+            "error": str(e)
         }
